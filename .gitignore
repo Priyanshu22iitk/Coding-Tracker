@@ -1,0 +1,10 @@
+# Security
+.env
+backend/.env
+
+# Python & Environment
+venv/
+env/
+__pycache__/
+*.pyc
+db.sqlite3
