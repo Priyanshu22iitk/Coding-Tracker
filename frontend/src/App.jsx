@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// 🌍 DYNAMIC API ROUTING: Uses live Render URL in production, defaults to localhost for development
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 function App() {
   const [problems, setProblems] = useState([]);
   const [formData, setFormData] = useState({
@@ -11,7 +14,6 @@ function App() {
     solution_notes: ''
   });
 
-  // 🔍 NEW STATE FOR FILTERING
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
@@ -20,7 +22,7 @@ function App() {
   }, []);
 
   const fetchProblems = () => {
-    axios.get('http://127.0.0.1:8000/api/problems/')
+    axios.get(`${API_BASE}/api/problems/`)
       .then(response => setProblems(response.data))
       .catch(error => console.error("Error fetching data:", error));
   };
@@ -36,7 +38,7 @@ function App() {
       return;
     }
 
-    axios.post('http://127.0.0.1:8000/api/problems/', formData)
+    axios.post(`${API_BASE}/api/problems/`, formData)
       .then(response => {
         setProblems([response.data, ...problems]);
         setFormData({ title: '', problem_url: '', platform: '', difficulty: 'Easy', solution_notes: '' });
@@ -46,7 +48,7 @@ function App() {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this problem log?")) {
-      axios.delete(`http://127.0.0.1:8000/api/problems/${id}/`)
+      axios.delete(`${API_BASE}/api/problems/${id}/`)
         .then(() => {
           setProblems(problems.filter(problem => problem.id !== id));
         })
@@ -59,13 +61,10 @@ function App() {
   const mediumCount = problems.filter(p => p.difficulty === 'Medium').length;
   const hardCount = problems.filter(p => p.difficulty === 'Hard').length;
 
-  // 🔍 PHASE 3 FILTER LOGIC: Compute the filtered list on the fly
   const filteredProblems = problems.filter(problem => {
     const matchesSearch = problem.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           problem.platform.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesDifficulty = selectedDifficulty === 'All' || problem.difficulty === selectedDifficulty;
-    
     return matchesSearch && matchesDifficulty;
   });
 
@@ -135,7 +134,7 @@ function App() {
         </form>
       </div>
 
-      {/* 🔍 NEW SEARCH AND FILTER CONTROLS */}
+      {/* SEARCH AND FILTER CONTROLS */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px', marginBottom: '20px', alignItems: 'center' }}>
         <input 
           type="text" 
@@ -156,7 +155,6 @@ function App() {
         </select>
       </div>
 
-      {/* THE PROBLEMS LIST DISPLAY (Swapped out for filteredProblems) */}
       <h2>Logged Problems</h2>
       {filteredProblems.length === 0 ? (
         <p style={{ color: '#aaa' }}>No matching problems found.</p>
